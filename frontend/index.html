@@ -37,7 +37,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm opacity-90">Dev Environment</span>
-                    <button id="healthCheck" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-lg transition-all">
+                    <button id="healthCheck" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-lg transition-all" aria-label="APIサーバーの状態を確認">
                         <i class="fas fa-heartbeat mr-2"></i>Health Check
                     </button>
                 </div>
@@ -114,9 +114,9 @@
                         <p id="uploadStatus" class="text-sm text-gray-600 mt-2">アップロード中...</p>
                     </div>
                     
-                    <button id="uploadBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                        <i class="fas fa-upload mr-2"></i>アップロード
-                    </button>
+                                            <button id="uploadBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors" aria-label="選択したファイルをアップロード">
+                            <i class="fas fa-upload mr-2"></i>アップロード
+                        </button>
                 </div>
 
                 <!-- Google Docs連携 -->
@@ -130,11 +130,13 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Google Drive検索</label>
                             <div class="flex space-x-2">
-                                <input type="text" id="googleSearchQuery" placeholder="ファイル名で検索..." 
-                                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
-                                <button id="googleSearchBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    <i class="fas fa-search"></i>
-                                </button>
+                                                            <input type="text" id="googleSearchQuery" placeholder="ファイル名で検索..." 
+                                   class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   aria-describedby="googleSearchHelp">
+                            <div id="googleSearchHelp" class="sr-only">Google Driveでファイル名を検索するための入力フィールド</div>
+                                                        <button id="googleSearchBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors" aria-label="Google Driveでファイルを検索">
+                            <i class="fas fa-search"></i>
+                        </button>
                             </div>
                         </div>
                         
@@ -143,7 +145,7 @@
                             <div id="googleFilesList" class="space-y-2 max-h-40 overflow-y-auto"></div>
                         </div>
                         
-                        <button id="listGoogleFilesBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                        <button id="listGoogleFilesBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors" aria-label="Google Driveのファイル一覧を表示">
                             <i class="fas fa-list mr-2"></i>Google Driveファイル一覧
                         </button>
                     </div>
@@ -152,7 +154,7 @@
 
             <!-- 右側: 検索とファイル管理 -->
             <div class="space-y-6">
-                <!-- RAG検索 -->
+                                <!-- RAG検索 -->
                 <div class="bg-white rounded-lg shadow-md p-6 card-hover">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">
                         <i class="fas fa-search mr-2 text-purple-600"></i>
@@ -163,27 +165,66 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">検索クエリ</label>
                             <input type="text" id="searchQuery" placeholder="スキルや経験について検索..." 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   aria-describedby="searchQueryHelp">
+                            <div id="searchQueryHelp" class="sr-only">スキルシートの内容を検索するための入力フィールド</div>
                         </div>
                         
                         <div class="flex items-center space-x-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">結果数</label>
-                                <select id="searchResultsCount" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <select id="searchResultsCount" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" aria-label="検索結果の表示件数を選択">
                                     <option value="5">5件</option>
                                     <option value="10" selected>10件</option>
                                     <option value="20">20件</option>
                                 </select>
                             </div>
-                            <button id="searchBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors mt-6">
+                            <button id="searchBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors mt-6" aria-label="RAG検索を実行">
                                 <i class="fas fa-search mr-2"></i>検索
-                </button>
-            </div>
+                            </button>
+                        </div>
                     </div>
                     
                     <div id="searchResultsContainer" class="hidden mt-6">
                         <h3 class="font-semibold text-gray-800 mb-3">検索結果:</h3>
                         <div id="searchResultsList" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- GPT回答生成 -->
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-robot mr-2 text-blue-600"></i>
+                        GPT回答生成
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">質問</label>
+                            <input type="text" id="gptQuery" placeholder="スキルシートについて質問してください..." 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   aria-describedby="gptQueryHelp">
+                            <div id="gptQueryHelp" class="sr-only">GPTに質問するための入力フィールド</div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">参考情報数</label>
+                                <select id="gptContextCount" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="GPT回答生成に使用する参考情報の数を選択">
+                                    <option value="3">3件</option>
+                                    <option value="5" selected>5件</option>
+                                    <option value="10">10件</option>
+                                </select>
+                            </div>
+                            <button id="gptGenerateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors mt-6" aria-label="GPTで回答を生成">
+                                <i class="fas fa-magic mr-2"></i>回答生成
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="gptAnswerContainer" class="hidden mt-6">
+                        <h3 class="font-semibold text-gray-800 mb-3">GPT回答:</h3>
+                        <div id="gptAnswer" class="bg-gray-50 rounded-lg p-4 text-gray-800 whitespace-pre-wrap"></div>
                     </div>
                 </div>
 
@@ -195,7 +236,7 @@
                     </h2>
                     
                     <div class="space-y-4">
-                        <button id="refreshFilesBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                        <button id="refreshFilesBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors" aria-label="アップロード済みファイルの一覧を更新">
                             <i class="fas fa-sync-alt mr-2"></i>ファイル一覧更新
                         </button>
                         
@@ -203,7 +244,7 @@
                             <p class="text-gray-500 text-center py-4">ファイルがありません</p>
         </div>
 
-                        <button id="clearRagBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                        <button id="clearRagBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors" aria-label="RAGコレクションの全データを削除">
                             <i class="fas fa-trash mr-2"></i>RAGコレクションクリア
                         </button>
                     </div>
@@ -570,6 +611,49 @@
             }
         }
         
+        // GPT回答生成
+        async function generateGptAnswer() {
+            const query = document.getElementById('gptQuery').value.trim();
+            const contextCount = document.getElementById('gptContextCount').value;
+            
+            if (!query) {
+                showToast('エラー', '質問を入力してください', 'error');
+                return;
+            }
+            
+            try {
+                // ボタンを無効化
+                const btn = document.getElementById('gptGenerateBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>生成中...';
+                
+                const response = await apiCall('/gpt/generate-answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `query=${encodeURIComponent(query)}&n_results=${contextCount}`
+                });
+                
+                // 回答を表示
+                const answerContainer = document.getElementById('gptAnswerContainer');
+                const answerDiv = document.getElementById('gptAnswer');
+                
+                answerDiv.textContent = response.answer;
+                answerContainer.classList.remove('hidden');
+                
+                showToast('成功', 'GPT回答が生成されました');
+                
+            } catch (error) {
+                showToast('エラー', 'GPT回答生成に失敗しました: ' + error.message, 'error');
+            } finally {
+                // ボタンを有効化
+                const btn = document.getElementById('gptGenerateBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic mr-2"></i>回答生成';
+            }
+        }
+        
         // イベントリスナー設定
         document.addEventListener('DOMContentLoaded', function() {
             // 初期化
@@ -581,6 +665,7 @@
             document.getElementById('googleSearchBtn').addEventListener('click', searchGoogleFiles);
             document.getElementById('listGoogleFilesBtn').addEventListener('click', listGoogleFiles);
             document.getElementById('searchBtn').addEventListener('click', searchSkillsheets);
+            document.getElementById('gptGenerateBtn').addEventListener('click', generateGptAnswer);
             document.getElementById('refreshFilesBtn').addEventListener('click', refreshFiles);
             document.getElementById('clearRagBtn').addEventListener('click', clearRagCollection);
             

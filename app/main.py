@@ -9,6 +9,7 @@ import logging
 from .services.file_service import FileService
 from .services.rag_service import RAGService
 from .services.google_docs_service import GoogleDocsService
+from .services.gpt_service import GPTService
 from .models.skillsheet import SkillsheetResponse, SearchResponse
 from .config import settings
 
@@ -35,6 +36,7 @@ app.add_middleware(
 file_service = FileService()
 rag_service = RAGService()
 google_docs_service = GoogleDocsService()
+gpt_service = GPTService()
 
 @app.get("/")
 async def root():
@@ -204,6 +206,56 @@ async def delete_file(filename: str):
     except Exception as e:
         logger.error(f"ファイル削除エラー: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/gpt/generate-answer")
+async def generate_gpt_answer(query: str = Form(...), n_results: int = Query(5)):
+    """GPTを使用して質問に対する回答を生成"""
+    try:
+        if not gpt_service.is_available():
+            raise HTTPException(
+                status_code=400,
+                detail="GPTサービスが利用できません。OpenAI APIキーを設定してください。"
+            )
+        
+        # まずRAG検索で関連情報を取得
+        search_results = await rag_service.search(query, n_results)
+        
+        if not search_results:
+            return {
+                "query": query,
+                "answer": "申し訳ございませんが、質問に関連する情報が見つかりませんでした。",
+                "context": [],
+                "message": "関連情報なしで回答を生成しました"
+            }
+        
+        # GPTで回答を生成
+        answer = await gpt_service.generate_answer(query, search_results)
+        
+        if not answer:
+            raise HTTPException(
+                status_code=500,
+                detail="GPT回答の生成に失敗しました"
+            )
+        
+        return {
+            "query": query,
+            "answer": answer,
+            "context": search_results,
+            "message": "GPT回答を生成しました"
+        }
+        
+    except Exception as e:
+        logger.error(f"GPT回答生成エラー: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/gpt/status")
+async def get_gpt_status():
+    """GPTサービスの状態を確認"""
+    return {
+        "available": gpt_service.is_available(),
+        "model": gpt_service.model if gpt_service.is_available() else None,
+        "message": "GPTサービス状態を確認しました"
+    }
 
 if __name__ == "__main__":
     import uvicorn

@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     GOOGLE_CREDENTIALS_FILE: str = "credentials.json"
     GOOGLE_TOKEN_FILE: str = "token.json"
     
+    # OpenAI GPT設定
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_MODEL: str = "gpt-3.5-turbo"
+    OPENAI_MAX_TOKENS: int = 1000
+    OPENAI_TEMPERATURE: float = 0.7
+    
     # Redis設定
     REDIS_URL: str = "redis://localhost:6379"
     
