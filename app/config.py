@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     # RAG設定
     CHROMA_PERSIST_DIR: str = "./chroma_db"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+
+    # Google API設定
+    GOOGLE_CREDENTIALS_FILE: str = "credentials.json"
+    GOOGLE_TOKEN_FILE: str = "token.json"
     
     # Redis設定
     REDIS_URL: str = "redis://localhost:6379"

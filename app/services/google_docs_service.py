@@ -35,8 +35,8 @@ class GoogleDocsService:
         """Google API認証"""
         try:
             # トークンファイルのパス
-            token_path = Path("token.json")
-            credentials_path = Path("credentials.json")
+            token_path = Path(settings.GOOGLE_TOKEN_FILE)
+            credentials_path = Path(settings.GOOGLE_CREDENTIALS_FILE)
             
             # 既存のトークンがある場合は読み込み
             if token_path.exists():

@@ -97,7 +97,35 @@ python -m app.main
 ```
 
 ### 5. フロントエンドのアクセス
-ブラウザで `frontend/index.html` を開く
+
+#### 事前確認
+APIサーバーが正常に動作していることを確認：
+```bash
+# 別のターミナルで実行
+curl http://localhost:8000/health
+# またはブラウザで http://localhost:8000/health を開く
+# 期待される結果: {"status":"healthy","environment":"development"}
+```
+
+#### 方法1: エクスプローラーから直接開く
+1. `C:\Users\[ユーザー名]\OneDrive\デスクトップ\frontend` フォルダを開く
+2. `index.html` ファイルをダブルクリック
+
+#### 方法2: ブラウザに直接URLを入力
+```
+file:///C:/Users/[ユーザー名]/OneDrive/デスクトップ/frontend/index.html
+```
+
+#### 方法3: PowerShellコマンドで開く
+```powershell
+Invoke-Item "frontend\index.html"
+```
+
+#### 方法4: 既存のブラウザタブで開く
+1. 新しいタブを開く
+2. 上記のfile:///URLをコピー&ペースト
+
+**注意**: フロントエンドを開く前に、必ずAPIサーバー（`python -m app.main`）が起動していることを確認してください。
 
 ## 🔐 Google API認証の設定
 
@@ -244,6 +272,17 @@ docker-compose -f docker-compose.prod.yml up --build
 #### RAG検索エラー
 - ChromaDBが正しく初期化されているか確認
 - 埋め込みモデルがダウンロードされているか確認
+
+#### フロントエンドが開かない
+- APIサーバー（`python -m app.main`）が起動しているか確認
+- ポート8000でリッスンしているか確認（`netstat -an | findstr :8000`）
+- ブラウザで `http://localhost:8000/health` にアクセスして「healthy」が返されるか確認
+- ファイルパスが正しいか確認（`C:\Users\[ユーザー名]\OneDrive\デスクトップ\frontend\index.html`）
+
+#### 接続が拒否される
+- APIサーバーが起動していない可能性
+- 依存関係のインストールが完了しているか確認（`pip install -r requirements.txt`）
+- 仮想環境がアクティブになっているか確認（`venv\Scripts\activate`）
 
 ## 🤝 コントリビューション
 

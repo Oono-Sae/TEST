@@ -177,8 +177,8 @@
                             </div>
                             <button id="searchBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors mt-6">
                                 <i class="fas fa-search mr-2"></i>検索
-                            </button>
-                        </div>
+                </button>
+            </div>
                     </div>
                     
                     <div id="searchResultsContainer" class="hidden mt-6">
@@ -201,16 +201,16 @@
                         
                         <div id="filesList" class="space-y-2 max-h-40 overflow-y-auto">
                             <p class="text-gray-500 text-center py-4">ファイルがありません</p>
-                        </div>
-                        
+        </div>
+
                         <button id="clearRagBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
                             <i class="fas fa-trash mr-2"></i>RAGコレクションクリア
                         </button>
                     </div>
                 </div>
             </div>
+            </div>
         </div>
-    </div>
 
     <!-- 通知トースト -->
     <div id="toast" class="fixed top-4 right-4 bg-white border-l-4 border-green-500 shadow-lg rounded-lg p-4 transform translate-x-full transition-transform duration-300 z-50">
@@ -331,24 +331,24 @@
                 showToast('エラー', 'ファイルを選択してください', 'error');
                 return;
             }
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            try {
+                    
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    try {
                 document.getElementById('uploadProgress').classList.remove('hidden');
                 document.getElementById('uploadBtn').disabled = true;
                 
                 const response = await fetch(`${API_BASE}/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
+                            method: 'POST',
+                            body: formData
+                        });
+                        
                 if (!response.ok) {
                     throw new Error(`Upload failed: ${response.status}`);
                 }
                 
-                const result = await response.json();
+                            const result = await response.json();
                 showToast('成功', 'ファイルがアップロードされました');
                 
                 // 状態を更新
@@ -376,7 +376,7 @@
                 const response = await apiCall(`/google-docs/search?query=${encodeURIComponent(query)}`);
                 displayGoogleFiles(response.files);
                 document.getElementById('googleSearchResults').classList.remove('hidden');
-            } catch (error) {
+                    } catch (error) {
                 showToast('エラー', 'Google Drive検索に失敗しました', 'error');
             }
         }
@@ -482,7 +482,7 @@
             
             if (result.results.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 text-center py-4">検索結果がありません</p>';
-            } else {
+                } else {
                 container.innerHTML = result.results.map(item => `
                     <div class="border border-gray-200 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-2">
@@ -523,12 +523,12 @@
                     <div class="flex-1">
                         <p class="font-medium text-gray-800">${file.filename}</p>
                         <p class="text-sm text-gray-500">${file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : 'Unknown'} • ${file.upload_date ? new Date(file.upload_date).toLocaleDateString() : 'Unknown'}</p>
-                    </div>
+                        </div>
                     <button onclick="deleteFile('${file.filename}')" 
                             class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors">
-                        削除
-                    </button>
-                </div>
+                            削除
+                        </button>
+                    </div>
             `).join('');
         }
         
