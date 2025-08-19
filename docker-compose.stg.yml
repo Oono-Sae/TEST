@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # メインアプリケーション (ステージング)
+  app:
+    build: .
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./app:/app
+      - ./uploads:/app/uploads
+      - ./chroma_db:/app/chroma_db
+    environment:
+      - ENVIRONMENT=staging
+      - DATABASE_URL=postgresql://stg_user:stg_password@postgres:5432/skillsheet_stg
+      - REDIS_URL=redis://redis:6379
+      - DEBUG=False
+    depends_on:
+      - postgres
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  # PostgreSQL (ステージング)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: skillsheet_stg
+      POSTGRES_USER: stg_user
+      POSTGRES_PASSWORD: stg_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_stg_data:/var/lib/postgresql/data
+    command: postgres -c shared_preload_libraries=pg_stat_statements
+
+  # Redis (キャッシュ用)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_stg_data:/data
+    command: redis-server --appendonly yes
+
+  # Nginx (リバースプロキシ)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.stg.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+
+volumes:
+  postgres_stg_data:
+  redis_stg_data:

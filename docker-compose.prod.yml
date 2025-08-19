@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # メインアプリケーション (本番)
+  app:
+    build: .
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./chroma_db:/app/chroma_db
+      - ./logs:/app/logs
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://prod_user:prod_password@postgres:5432/skillsheet_prod
+      - REDIS_URL=redis://redis:6379
+      - DEBUG=False
+    depends_on:
+      - postgres
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+
+  # PostgreSQL (本番)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: skillsheet_prod
+      POSTGRES_USER: prod_user
+      POSTGRES_PASSWORD: prod_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./backup:/backup
+    command: postgres -c shared_preload_libraries=pg_stat_statements -c max_connections=200
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+
+  # Redis (本番)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_prod_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
+  # Nginx (本番用リバースプロキシ)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  # バックアップサービス
+  backup:
+    image: postgres:15-alpine
+    volumes:
+      - ./backup:/backup
+      - postgres_prod_data:/var/lib/postgresql/data
+    command: |
+      sh -c '
+        while true; do
+          pg_dump -h postgres -U prod_user -d skillsheet_prod > /backup/backup_$$(date +%Y%m%d_%H%M%S).sql
+          find /backup -name "backup_*.sql" -mtime +7 -delete
+          sleep 86400
+        done
+      '
+    environment:
+      PGPASSWORD: prod_password
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - backup
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:

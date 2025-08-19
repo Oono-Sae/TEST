@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skillsheet RAG System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .loading {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- ヘッダー -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-brain text-3xl"></i>
+                    <h1 class="text-2xl font-bold">Skillsheet RAG System</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm opacity-90">Dev Environment</span>
+                    <button id="healthCheck" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-lg transition-all">
+                        <i class="fas fa-heartbeat mr-2"></i>Health Check
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- ステータス表示 -->
+        <div id="statusSection" class="mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                            <i class="fas fa-server text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-gray-800">API Status</h3>
+                            <p id="apiStatus" class="text-gray-600">Checking...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100 text-green-600">
+                            <i class="fas fa-google text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-gray-800">Google Auth</h3>
+                            <p id="googleAuthStatus" class="text-gray-600">Checking...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                            <i class="fas fa-database text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-gray-800">RAG Collection</h3>
+                            <p id="ragStatus" class="text-gray-600">Checking...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 左側: ファイルアップロード -->
+            <div class="space-y-6">
+                <!-- ローカルファイルアップロード -->
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-upload mr-2 text-blue-600"></i>
+                        ローカルファイルアップロード
+                    </h2>
+                    
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                        <input type="file" id="fileInput" accept=".xlsx,.pdf" class="hidden">
+                        <label for="fileInput" class="cursor-pointer">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600">クリックしてファイルを選択</p>
+                            <p class="text-sm text-gray-500 mt-2">Excel (.xlsx) または PDF (.pdf)</p>
+                        </label>
+                    </div>
+                    
+                    <div id="uploadProgress" class="hidden mt-4">
+                        <div class="bg-gray-200 rounded-full h-2">
+                            <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p id="uploadStatus" class="text-sm text-gray-600 mt-2">アップロード中...</p>
+                    </div>
+                    
+                    <button id="uploadBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-upload mr-2"></i>アップロード
+                    </button>
+                </div>
+
+                <!-- Google Docs連携 -->
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fab fa-google-drive mr-2 text-green-600"></i>
+                        Google Docs連携
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Google Drive検索</label>
+                            <div class="flex space-x-2">
+                                <input type="text" id="googleSearchQuery" placeholder="ファイル名で検索..." 
+                                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <button id="googleSearchBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="googleSearchResults" class="hidden">
+                            <h3 class="font-semibold text-gray-800 mb-2">検索結果:</h3>
+                            <div id="googleFilesList" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                        </div>
+                        
+                        <button id="listGoogleFilesBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                            <i class="fas fa-list mr-2"></i>Google Driveファイル一覧
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側: 検索とファイル管理 -->
+            <div class="space-y-6">
+                <!-- RAG検索 -->
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-search mr-2 text-purple-600"></i>
+                        RAG検索
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">検索クエリ</label>
+                            <input type="text" id="searchQuery" placeholder="スキルや経験について検索..." 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">結果数</label>
+                                <select id="searchResultsCount" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <option value="5">5件</option>
+                                    <option value="10" selected>10件</option>
+                                    <option value="20">20件</option>
+                                </select>
+                            </div>
+                            <button id="searchBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors mt-6">
+                                <i class="fas fa-search mr-2"></i>検索
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="searchResultsContainer" class="hidden mt-6">
+                        <h3 class="font-semibold text-gray-800 mb-3">検索結果:</h3>
+                        <div id="searchResultsList" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- ファイル管理 -->
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-folder mr-2 text-orange-600"></i>
+                        ファイル管理
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <button id="refreshFilesBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i>ファイル一覧更新
+                        </button>
+                        
+                        <div id="filesList" class="space-y-2 max-h-40 overflow-y-auto">
+                            <p class="text-gray-500 text-center py-4">ファイルがありません</p>
+                        </div>
+                        
+                        <button id="clearRagBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                            <i class="fas fa-trash mr-2"></i>RAGコレクションクリア
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知トースト -->
+    <div id="toast" class="fixed top-4 right-4 bg-white border-l-4 border-green-500 shadow-lg rounded-lg p-4 transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+            <div>
+                <p id="toastMessage" class="text-gray-800 font-medium"></p>
+                <p id="toastDescription" class="text-gray-600 text-sm"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // ユーティリティ関数
+        function showToast(message, description = '', type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastDescription = document.getElementById('toastDescription');
+            
+            toastMessage.textContent = message;
+            toastDescription.textContent = description;
+            
+            // 色を変更
+            const borderClass = type === 'success' ? 'border-green-500' : 'border-red-500';
+            const iconClass = type === 'success' ? 'fa-check-circle text-green-500' : 'fa-exclamation-circle text-red-500';
+            
+            toast.className = `fixed top-4 right-4 bg-white border-l-4 ${borderClass} shadow-lg rounded-lg p-4 transform translate-x-full transition-transform duration-300 z-50`;
+            toast.querySelector('i').className = `fas ${iconClass} mr-3`;
+            
+            // 表示
+            toast.classList.remove('translate-x-full');
+            
+            // 3秒後に非表示
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+        
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call error:', error);
+                throw error;
+            }
+        }
+        
+        // 初期化
+        async function initialize() {
+            await checkHealth();
+            await checkGoogleAuth();
+            await checkRagStatus();
+            await refreshFiles();
+        }
+        
+        // ヘルスチェック
+        async function checkHealth() {
+            try {
+                const response = await apiCall('/health');
+                document.getElementById('apiStatus').textContent = 'Healthy';
+                document.getElementById('apiStatus').className = 'text-green-600';
+            } catch (error) {
+                document.getElementById('apiStatus').textContent = 'Unhealthy';
+                document.getElementById('apiStatus').className = 'text-red-600';
+            }
+        }
+        
+        // Google認証状態確認
+        async function checkGoogleAuth() {
+            try {
+                const response = await apiCall('/google-auth-status');
+                const status = response.authenticated ? 'Authenticated' : 'Not Authenticated';
+                const className = response.authenticated ? 'text-green-600' : 'text-red-600';
+                
+                document.getElementById('googleAuthStatus').textContent = status;
+                document.getElementById('googleAuthStatus').className = className;
+            } catch (error) {
+                document.getElementById('googleAuthStatus').textContent = 'Error';
+                document.getElementById('googleAuthStatus').className = 'text-red-600';
+            }
+        }
+        
+        // RAG状態確認
+        async function checkRagStatus() {
+            try {
+                const response = await apiCall('/rag/collection-info');
+                const info = response.collection_info;
+                const status = `${info.total_documents} documents`;
+                
+                document.getElementById('ragStatus').textContent = status;
+                document.getElementById('ragStatus').className = 'text-green-600';
+            } catch (error) {
+                document.getElementById('ragStatus').textContent = 'Error';
+                document.getElementById('ragStatus').className = 'text-red-600';
+            }
+        }
+        
+        // ファイルアップロード
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showToast('エラー', 'ファイルを選択してください', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                document.getElementById('uploadProgress').classList.remove('hidden');
+                document.getElementById('uploadBtn').disabled = true;
+                
+                const response = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Upload failed: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                showToast('成功', 'ファイルがアップロードされました');
+                
+                // 状態を更新
+                await checkRagStatus();
+                await refreshFiles();
+                
+            } catch (error) {
+                showToast('エラー', 'アップロードに失敗しました', 'error');
+            } finally {
+                document.getElementById('uploadProgress').classList.add('hidden');
+                document.getElementById('uploadBtn').disabled = false;
+                fileInput.value = '';
+            }
+        }
+        
+        // Google Drive検索
+        async function searchGoogleFiles() {
+            const query = document.getElementById('googleSearchQuery').value.trim();
+            if (!query) {
+                showToast('エラー', '検索クエリを入力してください', 'error');
+                return;
+            }
+            
+            try {
+                const response = await apiCall(`/google-docs/search?query=${encodeURIComponent(query)}`);
+                displayGoogleFiles(response.files);
+                document.getElementById('googleSearchResults').classList.remove('hidden');
+            } catch (error) {
+                showToast('エラー', 'Google Drive検索に失敗しました', 'error');
+            }
+        }
+        
+        // Google Driveファイル一覧
+        async function listGoogleFiles() {
+            try {
+                const response = await apiCall('/google-docs/files');
+                displayGoogleFiles(response.files);
+                document.getElementById('googleSearchResults').classList.remove('hidden');
+            } catch (error) {
+                showToast('エラー', 'Google Driveファイル一覧取得に失敗しました', 'error');
+            }
+        }
+        
+        // Google Driveファイル表示
+        function displayGoogleFiles(files) {
+            const container = document.getElementById('googleFilesList');
+            
+            if (files.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-2">ファイルが見つかりません</p>';
+                return;
+            }
+            
+            container.innerHTML = files.map(file => `
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">${file.name}</p>
+                        <p class="text-sm text-gray-500">${file.mimeType} • ${new Date(file.modifiedTime).toLocaleDateString()}</p>
+                    </div>
+                    <button onclick="importGoogleFile('${file.id}', '${file.name}')" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                        インポート
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        // Google Driveファイルインポート
+        async function importGoogleFile(fileId, filename) {
+            try {
+                const formData = new FormData();
+                formData.append('file_id', fileId);
+                formData.append('filename', filename);
+                
+                const response = await fetch(`${API_BASE}/google-docs/import`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Import failed: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                showToast('成功', 'Google Driveからファイルがインポートされました');
+                
+                // 状態を更新
+                await checkRagStatus();
+                await refreshFiles();
+                
+            } catch (error) {
+                showToast('エラー', 'インポートに失敗しました', 'error');
+            }
+        }
+        
+        // RAG検索
+        async function searchSkillsheets() {
+            const query = document.getElementById('searchQuery').value.trim();
+            const nResults = document.getElementById('searchResultsCount').value;
+            
+            if (!query) {
+                showToast('エラー', '検索クエリを入力してください', 'error');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('query', query);
+                formData.append('n_results', nResults);
+                
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Search failed: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                displaySearchResults(result);
+                
+            } catch (error) {
+                showToast('エラー', '検索に失敗しました', 'error');
+            }
+        }
+        
+        // 検索結果表示
+        function displaySearchResults(result) {
+            const container = document.getElementById('searchResultsList');
+            const resultsDiv = document.getElementById('searchResultsContainer');
+            
+            if (result.results.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">検索結果がありません</p>';
+            } else {
+                container.innerHTML = result.results.map(item => `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-gray-800">${item.filename}</h4>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                スコア: ${(item.score * 100).toFixed(1)}%
+                            </span>
+                        </div>
+                        <p class="text-gray-600 text-sm">${item.content.substring(0, 200)}${item.content.length > 200 ? '...' : ''}</p>
+                    </div>
+                `).join('');
+            }
+            
+            resultsDiv.classList.remove('hidden');
+        }
+        
+        // ファイル一覧更新
+        async function refreshFiles() {
+            try {
+                const response = await apiCall('/files');
+                displayFiles(response);
+            } catch (error) {
+                showToast('エラー', 'ファイル一覧取得に失敗しました', 'error');
+            }
+        }
+        
+        // ファイル表示
+        function displayFiles(files) {
+            const container = document.getElementById('filesList');
+            
+            if (files.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">ファイルがありません</p>';
+                return;
+            }
+            
+            container.innerHTML = files.map(file => `
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">${file.filename}</p>
+                        <p class="text-sm text-gray-500">${file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : 'Unknown'} • ${file.upload_date ? new Date(file.upload_date).toLocaleDateString() : 'Unknown'}</p>
+                    </div>
+                    <button onclick="deleteFile('${file.filename}')" 
+                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                        削除
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        // ファイル削除
+        async function deleteFile(filename) {
+            if (!confirm(`ファイル "${filename}" を削除しますか？`)) {
+                return;
+            }
+            
+            try {
+                await apiCall(`/files/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+                showToast('成功', 'ファイルが削除されました');
+                
+                // 状態を更新
+                await checkRagStatus();
+                await refreshFiles();
+                
+            } catch (error) {
+                showToast('エラー', 'ファイル削除に失敗しました', 'error');
+            }
+        }
+        
+        // RAGコレクションクリア
+        async function clearRagCollection() {
+            if (!confirm('RAGコレクションをクリアしますか？この操作は元に戻せません。')) {
+                return;
+            }
+            
+            try {
+                await apiCall('/rag/clear', { method: 'POST' });
+                showToast('成功', 'RAGコレクションがクリアされました');
+                
+                // 状態を更新
+                await checkRagStatus();
+                await refreshFiles();
+                
+            } catch (error) {
+                showToast('エラー', 'RAGコレクションクリアに失敗しました', 'error');
+            }
+        }
+        
+        // イベントリスナー設定
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初期化
+            initialize();
+            
+            // ボタンイベント
+            document.getElementById('healthCheck').addEventListener('click', checkHealth);
+            document.getElementById('uploadBtn').addEventListener('click', uploadFile);
+            document.getElementById('googleSearchBtn').addEventListener('click', searchGoogleFiles);
+            document.getElementById('listGoogleFilesBtn').addEventListener('click', listGoogleFiles);
+            document.getElementById('searchBtn').addEventListener('click', searchSkillsheets);
+            document.getElementById('refreshFilesBtn').addEventListener('click', refreshFiles);
+            document.getElementById('clearRagBtn').addEventListener('click', clearRagCollection);
+            
+            // ファイル選択時の処理
+            document.getElementById('fileInput').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    document.getElementById('uploadBtn').disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
